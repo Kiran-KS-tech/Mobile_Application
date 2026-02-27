@@ -1,0 +1,8 @@
+node_modules/
+
+.DS_Store
+backend/node_modules/
+CalmXMobile/node_modules/
+CalmXMobile/android/build/
+CalmXMobile/ios/build/
+*.log
