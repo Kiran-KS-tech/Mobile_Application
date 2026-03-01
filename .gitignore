@@ -6,3 +6,4 @@ CalmXMobile/node_modules/
 CalmXMobile/android/build/
 CalmXMobile/ios/build/
 *.log
+.env
