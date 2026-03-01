@@ -6,6 +6,7 @@ import { useAppSelector } from '../hooks/useAppSelector';
 import { restoreSessionThunk } from '../store/slices/authSlice';
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
+import AdminNavigator from './AdminNavigator';
 import { RootStackParamList } from '../types';
 import { useTheme } from '../hooks/useTheme';
 
@@ -13,8 +14,8 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 const RootNavigator = () => {
   const dispatch = useAppDispatch();
-  const { token, isRestoring } = useAppSelector(state => state.auth);
-  const { colors, typography } = useTheme();
+  const { token, user, isRestoring } = useAppSelector(state => state.auth);
+  const { typography } = useTheme();
 
   useEffect(() => {
     dispatch(restoreSessionThunk());
@@ -31,7 +32,11 @@ const RootNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {token ? (
-        <Stack.Screen name="Main" component={MainTabNavigator} />
+        user?.role === 'admin' ? (
+          <Stack.Screen name="Admin" component={AdminNavigator} />
+        ) : (
+           <Stack.Screen name="Main" component={MainTabNavigator} />
+        )
       ) : (
         <Stack.Screen name="Auth" component={AuthNavigator} />
       )}

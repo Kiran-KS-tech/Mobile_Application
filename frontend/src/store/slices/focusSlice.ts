@@ -27,7 +27,7 @@ export const fetchFocusSessions = createAsyncThunk('focus/fetchSessions',
 );
 
 export const logSessionThunk = createAsyncThunk('focus/logSession',
-  async (session: Omit<FocusSession, 'id'>, { rejectWithValue }) => {
+  async (session: Omit<FocusSession, '_id'>, { rejectWithValue }) => {
     try { return await focusApi.logSession(session); }
     catch (e: any) { return rejectWithValue(e.message); }
   }

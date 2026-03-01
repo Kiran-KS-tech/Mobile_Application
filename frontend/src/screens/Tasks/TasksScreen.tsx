@@ -57,7 +57,7 @@ const TasksScreen = () => {
     <Card style={styles.taskCard}>
       <TouchableOpacity 
         style={styles.checkbox} 
-        onPress={() => dispatch(toggleTaskThunk(item.id))}
+        onPress={() => dispatch(toggleTaskThunk(item._id))}
       >
         <MaterialCommunityIcons 
           name={item.completed ? 'checkbox-marked' : 'checkbox-blank-outline'} 
@@ -78,7 +78,7 @@ const TasksScreen = () => {
  
       <Badge label={item.priority.toUpperCase()} type={item.priority} />
 
-      <TouchableOpacity onPress={() => dispatch(deleteTaskThunk(item.id))} style={{ marginLeft: 12 }}>
+      <TouchableOpacity onPress={() => dispatch(deleteTaskThunk(item._id))} style={{ marginLeft: 12 }}>
         <MaterialCommunityIcons name="delete-outline" size={20} color={colors.error} />
       </TouchableOpacity>
     </Card>
@@ -116,7 +116,7 @@ const TasksScreen = () => {
       <FlatList
         data={filteredTasks}
         renderItem={renderTask}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item._id}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <Text style={[typography.body, { color: colors.textTertiary, textAlign: 'center', marginTop: 40 }]}>

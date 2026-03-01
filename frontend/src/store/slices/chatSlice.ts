@@ -1,7 +1,6 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction, nanoid } from '@reduxjs/toolkit';
 import { chatApi } from '../../services/api/chat.api';
 import { ChatState, Message } from '../../types';
-import { nanoid } from '@reduxjs/toolkit';
 
 const initialState: ChatState = {
   messages: [], isTyping: false, isLoading: false, isSending: false, error: null, sessionId: null,
@@ -27,7 +26,7 @@ const chatSlice = createSlice({
   reducers: {
     addOptimisticMessage: (s, a: PayloadAction<string>) => {
       const msg: Message = {
-        id: nanoid(), content: a.payload, role: 'user',
+        _id: nanoid(), content: a.payload, role: 'user',
         timestamp: new Date().toISOString(),
       };
       s.messages.push(msg);

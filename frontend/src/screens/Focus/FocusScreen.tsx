@@ -150,7 +150,7 @@ const FocusScreen = () => {
         </View>
 
         {sessions.slice(0, 5).map(session => (
-          <Card key={session.id} style={styles.sessionItem}>
+          <Card key={session._id} style={styles.sessionItem}>
             <Badge label={session.type.toUpperCase()} type="focus" />
             <Text style={[typography.mono, { color: colors.textPrimary }]}>
               {Math.round(session.duration / 60)} min

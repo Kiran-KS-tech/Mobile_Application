@@ -71,6 +71,12 @@ export const Typography = {
     letterSpacing: 0.6,
     lineHeight: 16,
   } as TextStyle,
+  labelSmall: {
+    fontSize: 10,
+    fontWeight: '600' as TextStyle['fontWeight'],
+    letterSpacing: 0.8,
+    lineHeight: 14,
+  } as TextStyle,
   labelCaps: {
     fontSize: 11,
     fontWeight: '700' as TextStyle['fontWeight'],

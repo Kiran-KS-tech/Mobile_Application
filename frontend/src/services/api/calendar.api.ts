@@ -2,7 +2,7 @@ import { axiosInstance } from './axios.instance';
 import { CalendarEvent } from '../../types';
 
 const mapEvent = (backendEvent: any): CalendarEvent => ({
-  id: backendEvent.id,
+  _id: backendEvent._id || backendEvent.id,
   title: backendEvent.title || 'Untitled',
   description: backendEvent.description,
   type: backendEvent.type || 'meeting',
@@ -16,7 +16,7 @@ export const calendarApi = {
     const { data } = await axiosInstance.get(`/calendar/events?month=${month}`);
     return (data.events || []).map(mapEvent);
   },
-  createEvent: async (event: Omit<CalendarEvent, 'id'>): Promise<CalendarEvent> => {
+  createEvent: async (event: Omit<CalendarEvent, '_id'>): Promise<CalendarEvent> => {
     const { data } = await axiosInstance.post('/calendar/event', {
       ...event,
       start: event.startTime,
@@ -25,7 +25,7 @@ export const calendarApi = {
     return mapEvent(data.event || data);
   },
   updateEvent: async (event: CalendarEvent): Promise<CalendarEvent> => {
-    const { data } = await axiosInstance.put(`/calendar/event/${event.id}`, {
+    const { data } = await axiosInstance.put(`/calendar/event/${event._id}`, {
       ...event,
       start: event.startTime,
       end: event.endTime,

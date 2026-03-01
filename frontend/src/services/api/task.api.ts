@@ -6,12 +6,12 @@ export const taskApi = {
     const { data } = await axiosInstance.get('/tasks');
     return data;
   },
-  createTask: async (task: Omit<Task, 'id' | 'createdAt' | 'completed'>): Promise<Task> => {
+  createTask: async (task: Omit<Task, '_id' | 'createdAt' | 'completed'>): Promise<Task> => {
     const { data } = await axiosInstance.post('/tasks', task);
     return data;
   },
   updateTask: async (task: Task): Promise<Task> => {
-    const { data } = await axiosInstance.put(`/tasks/${task.id}`, task);
+    const { data } = await axiosInstance.put(`/tasks/${task._id}`, task);
     return data;
   },
   deleteTask: async (id: string): Promise<void> => {

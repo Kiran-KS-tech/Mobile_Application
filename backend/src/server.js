@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const { initCronJobs } = require('./jobs/attendanceCron');
 
 const startServer = async () => {
     try {
@@ -27,12 +28,18 @@ const startServer = async () => {
         app.use('/api/tasks', require('./routes/taskRoutes'));
         app.use('/api/focus', require('./routes/focusRoutes'));
         app.use('/api/wellness', require('./routes/wellnessRoutes'));
+        app.use('/api/leave', require('./routes/leaveRoutes'));
+        app.use('/api/attendance', require('./routes/attendanceRoutes'));
+        app.use('/api/holidays', require('./routes/holidayRoutes'));
 
         app.get('/', (req, res) => {
             res.send('CalmX API is running...');
         });
 
         const PORT = process.env.PORT || 5000;
+
+        // Initialize cron jobs
+        initCronJobs();
 
         app.listen(PORT, '0.0.0.0', () => {
             console.log(`Server running on port ${PORT}`);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
+import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 
 interface ButtonProps {
@@ -9,7 +9,7 @@ interface ButtonProps {
   isLoading?: boolean;
   disabled?: boolean;
   size?: 'lg' | 'md' | 'sm';
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 const Button = ({

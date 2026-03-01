@@ -6,7 +6,7 @@ export const focusApi = {
     const { data } = await axiosInstance.get('/focus/sessions');
     return data;
   },
-  logSession: async (session: Omit<FocusSession, 'id'>): Promise<FocusSession> => {
+  logSession: async (session: Omit<FocusSession, '_id'>): Promise<FocusSession> => {
     const { data } = await axiosInstance.post('/focus/sessions', session);
     return data;
   },

@@ -4,7 +4,7 @@ import { authApi } from '../../services/api/auth.api';
 import { AuthState, User } from '../../types';
 
 const initialState: AuthState = {
-  user: null, token: null,
+  user: null, users: [], token: null,
   isLoading: false, isRestoring: true, error: null,
 };
 
@@ -43,6 +43,16 @@ export const logoutThunk = createAsyncThunk('auth/logout', async () => {
   await SecureStore.deleteItemAsync('calmx_token');
 });
 
+export const fetchAllUsersThunk = createAsyncThunk('auth/fetchAllUsers',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await authApi.getAllUsers();
+    } catch (e: any) {
+      return rejectWithValue(e?.response?.data?.message || 'Failed to fetch users');
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -66,7 +76,11 @@ const authSlice = createSlice({
     b.addCase(restoreSessionThunk.fulfilled, (s, a) => { s.isRestoring = false; s.token = a.payload.token; s.user = a.payload.user; });
     b.addCase(restoreSessionThunk.rejected, s => { s.isRestoring = false; });
     // logout
-    b.addCase(logoutThunk.fulfilled, s => { s.user = null; s.token = null; });
+    b.addCase(logoutThunk.fulfilled, s => { s.user = null; s.token = null; s.users = []; });
+    // fetchAllUsers
+    b.addCase(fetchAllUsersThunk.pending, s => { s.isLoading = true; });
+    b.addCase(fetchAllUsersThunk.fulfilled, (s, a) => { s.isLoading = false; s.users = a.payload; });
+    b.addCase(fetchAllUsersThunk.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string; });
   },
 });
 

@@ -1,15 +1,18 @@
 // ── Auth ──────────────────────────────────────────────────────
 export interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   avatar?: string;
   role?: string;
+  medicalLeaves: number;
+  casualLeaves: number;
   createdAt: string;
 }
 
 export interface AuthState {
   user: User | null;
+  users: User[]; // Add this
   token: string | null;
   isLoading: boolean;
   isRestoring: boolean;
@@ -21,7 +24,7 @@ export type MoodType = 'great' | 'good' | 'okay' | 'low' | 'awful';
 export type MoodNumeric = 5 | 4 | 3 | 2 | 1;
 
 export interface MoodLog {
-  id: string;
+  _id: string;
   mood: MoodType;
   moodScore: MoodNumeric;
   stressLevel: number;    // 0–10
@@ -49,7 +52,7 @@ export interface MoodState {
 
 // ── Chat ──────────────────────────────────────────────────────
 export interface Message {
-  id: string;
+  _id: string;
   content: string;
   role: 'user' | 'assistant';
   timestamp: string;
@@ -70,7 +73,7 @@ export type EventType = 'meeting' | 'task' | 'focus' | 'break';
 export type CalendarViewMode = 'month' | 'day';
 
 export interface CalendarEvent {
-  id: string;
+  _id: string;
   title: string;
   description?: string;
   type: EventType;
@@ -95,7 +98,7 @@ export interface CalendarState {
 export type Priority = 'high' | 'medium' | 'low';
 
 export interface Task {
-  id: string;
+  _id: string;
   title: string;
   description?: string;
   priority: Priority;
@@ -120,7 +123,7 @@ export type TimerStatus = 'idle' | 'running' | 'paused' | 'break';
 export type SessionType = 'focus' | 'short_break' | 'long_break';
 
 export interface FocusSession {
-  id: string;
+  _id: string;
   duration: number;       // seconds
   type: SessionType;
   completedAt: string;
@@ -162,6 +165,7 @@ export interface WellnessState {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  Admin: undefined;
 };
 
 export type AuthStackParamList = {
@@ -176,4 +180,12 @@ export type MainTabParamList = {
   Tasks:     undefined;
   Focus:     undefined;
   Profile:   undefined;
+};
+
+export type AdminTabParamList = {
+  AdminDashboard: undefined;
+  AdminAttendance: undefined;
+  AdminHolidays: undefined;
+  AdminLeaves: undefined;
+  AdminUsers: undefined; // Add this
 };

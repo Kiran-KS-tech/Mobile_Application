@@ -12,6 +12,8 @@ const sanitizeUser = (user) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        medicalLeaves: user.medicalLeaves,
+        casualLeaves: user.casualLeaves,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
     };
@@ -119,4 +121,15 @@ const updateProfile = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser, getProfile, updateProfile };
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find({}).sort({ createdAt: -1 });
+        const sanitizedUsers = users.map(user => sanitizeUser(user));
+        return res.json(sanitizedUsers);
+    } catch (error) {
+        console.error('Error in getAllUsers:', error);
+        return res.status(500).json({ message: 'Server error while fetching all users' });
+    }
+};
+
+module.exports = { registerUser, loginUser, getProfile, updateProfile, getAllUsers };

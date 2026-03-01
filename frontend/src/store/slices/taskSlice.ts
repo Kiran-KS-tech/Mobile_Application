@@ -14,7 +14,7 @@ export const fetchTasks = createAsyncThunk('tasks/fetch',
 );
 
 export const createTaskThunk = createAsyncThunk('tasks/create',
-  async (task: Omit<Task, 'id' | 'createdAt' | 'completed'>, { rejectWithValue }) => {
+  async (task: Omit<Task, '_id' | 'createdAt' | 'completed'>, { rejectWithValue }) => {
     try { return await taskApi.createTask(task); }
     catch (e: any) { return rejectWithValue(e.message); }
   }
@@ -24,7 +24,7 @@ export const toggleTaskThunk = createAsyncThunk('tasks/toggle',
   async (id: string, { rejectWithValue, getState }) => {
     try {
       const state = (getState() as any).tasks as TaskState;
-      const task = state.tasks.find(t => t.id === id)!;
+      const task = state.tasks.find(t => t._id === id)!;
       return await taskApi.updateTask({ ...task, completed: !task.completed });
     } catch (e: any) { return rejectWithValue(e.message); }
   }
@@ -50,11 +50,11 @@ const taskSlice = createSlice({
 
     b.addCase(createTaskThunk.fulfilled, (s, a) => { s.tasks.unshift(a.payload); });
     b.addCase(toggleTaskThunk.fulfilled, (s, a) => {
-      const idx = s.tasks.findIndex(t => t.id === a.payload.id);
+      const idx = s.tasks.findIndex(t => t._id === a.payload._id);
       if (idx >= 0) s.tasks[idx] = a.payload;
     });
     b.addCase(deleteTaskThunk.fulfilled, (s, a) => {
-      s.tasks = s.tasks.filter(t => t.id !== a.payload);
+      s.tasks = s.tasks.filter(t => t._id !== a.payload);
     });
   },
 });

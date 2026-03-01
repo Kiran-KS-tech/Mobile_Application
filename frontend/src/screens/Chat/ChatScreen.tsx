@@ -86,19 +86,20 @@ const ChatScreen = () => {
               ref={flatListRef}
               data={messages}
               renderItem={renderMessage}
-              keyExtractor={item => item.id}
+              keyExtractor={(item, index) => item._id || `msg-${index}`}
               contentContainerStyle={styles.listContent}
               onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
               onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+              ListFooterComponent={
+                isTyping ? (
+                  <View style={[styles.aiContainer, { marginBottom: 16 }]}>
+                    <View style={[styles.bubble, { backgroundColor: colors.bubbleAI, borderRadius: radius.lg, paddingVertical: 12 }]}>
+                      <ActivityIndicator size="small" color={colors.accent} />
+                    </View>
+                  </View>
+                ) : null
+              }
             />
-
-            {isTyping && (
-              <View style={[styles.aiContainer, { paddingHorizontal: 24, marginBottom: 16 }]}>
-                <View style={[styles.bubble, { backgroundColor: colors.bubbleAI, borderRadius: radius.lg, paddingVertical: 12 }]}>
-                  <ActivityIndicator size="small" color={colors.accent} />
-                </View>
-              </View>
-            )}
           </View>
         </TouchableWithoutFeedback>
 

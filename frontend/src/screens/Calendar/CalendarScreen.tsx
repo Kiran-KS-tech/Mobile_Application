@@ -109,7 +109,7 @@ const CalendarScreen = () => {
                 <View style={styles.dotRow}>
                   {dateEvents.slice(0, 3).map(e => (
                     <View 
-                      key={e.id} 
+                      key={e._id} 
                       style={[styles.dot, { backgroundColor: (colors as any)[`event${e.type.charAt(0).toUpperCase() + e.type.slice(1)}`] || colors.accent }]} 
                     />
                   ))}
@@ -154,7 +154,7 @@ const CalendarScreen = () => {
 
         {selectedDateEvents.length > 0 ? (
           selectedDateEvents.map(event => (
-            <Card key={event.id} style={styles.eventCard}>
+            <Card key={event._id} style={styles.eventCard}>
               <View style={styles.eventInfo}>
                 <Text style={[typography.h4, { color: colors.textPrimary }]}>{event.title}</Text>
                 <Text style={[typography.bodySmall, { color: colors.textTertiary }]}>

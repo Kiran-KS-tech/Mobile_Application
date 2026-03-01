@@ -17,7 +17,7 @@ export const fetchEvents = createAsyncThunk('calendar/fetch',
 );
 
 export const createEventThunk = createAsyncThunk('calendar/create',
-  async (event: Omit<CalendarEvent, 'id'>, { rejectWithValue }) => {
+  async (event: Omit<CalendarEvent, '_id'>, { rejectWithValue }) => {
     try { return await calendarApi.createEvent(event); }
     catch (e: any) { return rejectWithValue(e.message); }
   }
@@ -51,11 +51,11 @@ const calendarSlice = createSlice({
 
     b.addCase(createEventThunk.fulfilled, (s, a) => { s.isSubmitting = false; s.events.push(a.payload); });
     b.addCase(updateEventThunk.fulfilled, (s, a) => {
-      const idx = s.events.findIndex(e => e.id === a.payload.id);
+      const idx = s.events.findIndex(e => e._id === a.payload._id);
       if (idx >= 0) s.events[idx] = a.payload;
     });
     b.addCase(deleteEventThunk.fulfilled, (s, a) => {
-      s.events = s.events.filter(e => e.id !== a.payload);
+      s.events = s.events.filter(e => e._id !== a.payload);
     });
   },
 });

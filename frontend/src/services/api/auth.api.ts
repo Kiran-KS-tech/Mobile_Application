@@ -22,5 +22,8 @@ export const authApi = {
     // Backend is stateless, logout is handled on frontend by clearing token
     return Promise.resolve();
   },
-
+  getAllUsers: async (): Promise<User[]> => {
+    const { data } = await axiosInstance.get('/auth/all-users');
+    return data;
+  },
 };

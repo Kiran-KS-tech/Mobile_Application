@@ -17,10 +17,12 @@ import { fetchTasks } from '../../store/slices/taskSlice';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Divider from '../../components/common/Divider';
+import { useNavigation } from '@react-navigation/native';
 
 const ProfileScreen = () => {
   const { colors, typography } = useTheme();
   const dispatch = useAppDispatch();
+  const navigation = useNavigation<any>();
   const { user } = useAppSelector(state => state.auth);
   const { summary } = useAppSelector(state => state.wellness);
   const { tasks } = useAppSelector(state => state.tasks);
@@ -104,8 +106,26 @@ const ProfileScreen = () => {
           </View>
         </Card>
 
-        {/* Privacy Settings */}
+        {/* HR Tools */}
         <View style={styles.sectionHeader}>
+          <Text style={[typography.labelCaps, { color: colors.textTertiary }]}>HR TOOLS</Text>
+        </View>
+
+        <View style={styles.settingRow}>
+          <Text style={[typography.body, { color: colors.textPrimary }]}>My Attendance</Text>
+          <Button variant="ghost" label="View" onPress={() => navigation.navigate('Attendance')} size="sm" style={{ width: 80 }} />
+        </View>
+        <View style={styles.settingRow}>
+          <Text style={[typography.body, { color: colors.textPrimary }]}>My Leaves</Text>
+          <Button variant="ghost" label="View" onPress={() => navigation.navigate('Leaves')} size="sm" style={{ width: 80 }} />
+        </View>
+        <View style={styles.settingRow}>
+          <Text style={[typography.body, { color: colors.textPrimary }]}>Company Holidays</Text>
+          <Button variant="ghost" label="View" onPress={() => navigation.navigate('Holidays')} size="sm" style={{ width: 80 }} />
+        </View>
+
+        {/* Privacy Settings */}
+        <View style={[styles.sectionHeader, { marginTop: 24 }]}>
           <Text style={[typography.labelCaps, { color: colors.textTertiary }]}>SETTINGS</Text>
         </View>
 
