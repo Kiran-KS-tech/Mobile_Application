@@ -11,13 +11,13 @@
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://clamxrepobacked-1.onrender.com/api"
+        "EXPO_PUBLIC_API_BASE_URL": "https://clamx-repo-backed.vercel.app/api"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://clamxrepobacked-1.onrender.com/api"
+        "EXPO_PUBLIC_API_BASE_URL": "https://clamx-repo-backed.vercel.app/api"
       }
     }
   },

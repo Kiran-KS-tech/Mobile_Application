@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://clamxrepobacked-1.onrender.com/api';
+const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://clamx-repo-backed.vercel.app/api';
 
 export const axiosInstance = axios.create({
   baseURL: BASE_URL,
