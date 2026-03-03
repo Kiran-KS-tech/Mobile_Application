@@ -9,6 +9,7 @@ import { useAppSelector } from '../../hooks/useAppSelector';
 import { logoutThunk, fetchAllUsersThunk } from '../../store/slices/authSlice';
 import { fetchAllRecords } from '../../store/slices/attendanceSlice';
 import { fetchPendingLeaves } from '../../store/slices/leaveSlice';
+import { fetchBurnoutRisks } from '../../store/slices/adminSlice';
 import { AdminTabParamList } from '../../types';
 import Card from '../../components/common/Card';
 import BarChart from '../../components/admin/BarChart';
@@ -26,13 +27,15 @@ const AdminDashboardScreen = () => {
   const { user, users, isLoading: authLoading } = useAppSelector(state => state.auth);
   const { allRecords, isLoading: attendanceLoading } = useAppSelector(state => state.attendance);
   const { pendingLeaves, isLoading: leaveLoading } = useAppSelector(state => state.leave);
+  const { burnoutRisks, isLoading: adminLoading, error: adminError } = useAppSelector(state => state.admin);
 
-  const isLoading = authLoading || attendanceLoading || leaveLoading;
+  const isLoading = authLoading || attendanceLoading || leaveLoading || adminLoading;
 
   const loadData = useCallback(() => {
     dispatch(fetchAllRecords());
     dispatch(fetchPendingLeaves());
     dispatch(fetchAllUsersThunk());
+    dispatch(fetchBurnoutRisks());
   }, [dispatch]);
 
   useEffect(() => {
@@ -72,6 +75,30 @@ const AdminDashboardScreen = () => {
       { label: 'Unpaid', value: unpaid, color: '#FFD93D' },
     ];
   }, [pendingLeaves]);
+
+  // ────── Attendance Distribution ──────
+  const attendanceDistribution = useMemo(() => {
+    const present = todayAttendance;
+    const absent = Math.max(0, users.length - present);
+    return [
+      { label: 'Present', value: present, color: '#4ECDC4' },
+      { label: 'Absent', value: absent, color: colors.surfaceElevated },
+    ];
+  }, [todayAttendance, users.length, colors.surfaceElevated]);
+
+  // ────── Burnout Risk Distribution ──────
+  const burnoutDistribution = useMemo(() => {
+    const high = burnoutRisks.filter(r => r.riskLevel === 'High').length;
+    const medium = burnoutRisks.filter(r => r.riskLevel === 'Medium').length;
+    const low = burnoutRisks.filter(r => r.riskLevel === 'Low').length;
+    const stable = Math.max(0, users.length - (high + medium + low));
+    
+    return [
+      { label: 'High Risk', value: high, color: colors.error },
+      { label: 'Moderate', value: medium, color: colors.warning },
+      { label: 'Stable', value: stable, color: '#4ECDC4' },
+    ];
+  }, [burnoutRisks, users.length, colors.error, colors.warning]);
 
   // ────── Leave Balance Aggregate ──────
   const leaveBalanceData = useMemo(() => {
@@ -179,6 +206,60 @@ const AdminDashboardScreen = () => {
         </Card>
       </View>
 
+      {/* Burnout Risk Alerts */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <MaterialCommunityIcons name="robot" size={20} color={colors.accent} style={{ marginRight: 8 }} />
+            <Text style={[typography.h3, { color: colors.textPrimary }]}>AI Burnout Analytics</Text>
+          </View>
+          {adminLoading && <Text style={[typography.labelSmall, { color: colors.accent }]}>Analyzing...</Text>}
+        </View>
+
+        {adminError ? (
+          <Card style={[styles.errorCard, { borderColor: colors.error + '40' }]}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={24} color={colors.error} />
+            <Text style={[typography.bodySmall, { color: colors.textSecondary, marginLeft: 12, flex: 1 }]}>
+              {adminError}
+            </Text>
+            <TouchableOpacity onPress={() => dispatch(fetchBurnoutRisks())}>
+              <Text style={[typography.label, { color: colors.accent }]}>RETRY</Text>
+            </TouchableOpacity>
+          </Card>
+        ) : burnoutRisks.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.riskScroll}>
+            {burnoutRisks.map((risk, index) => (
+              <Card key={index} style={[styles.riskCard, { borderLeftColor: risk.riskLevel === 'High' ? colors.error : colors.warning }]}>
+                <View style={styles.riskHeader}>
+                  <Text style={[typography.h4, { color: colors.textPrimary }]}>{risk.name}</Text>
+                  <View style={[styles.riskBadge, { backgroundColor: (risk.riskLevel === 'High' ? colors.error : colors.warning) + '20' }]}>
+                    <Text style={[styles.riskBadgeText, { color: risk.riskLevel === 'High' ? colors.error : colors.warning }]}>
+                      {risk.riskLevel} Risk
+                    </Text>
+                  </View>
+                </View>
+                <Text style={[typography.bodySmall, { color: colors.textSecondary, marginBottom: 8 }]} numberOfLines={2}>
+                  {risk.reason}
+                </Text>
+                <View style={[styles.tipContainer, { backgroundColor: colors.surfaceElevated }]}>
+                  <MaterialCommunityIcons name="lightbulb-on-outline" size={14} color={colors.accent} />
+                  <Text style={[styles.tipText, { color: colors.textPrimary }]} numberOfLines={2}>
+                    {risk.recommendation}
+                  </Text>
+                </View>
+              </Card>
+            ))}
+          </ScrollView>
+        ) : !adminLoading && (
+          <Card style={styles.emptyRiskCard}>
+            <MaterialCommunityIcons name="check-decagram-outline" size={24} color="#4ECDC4" />
+            <Text style={[typography.bodySmall, { color: colors.textSecondary, marginLeft: 12 }]}>
+              No high-risk fatigue patterns detected this week.
+            </Text>
+          </Card>
+        )}
+      </View>
+
       {/* Weekly Attendance Chart */}
       <View style={styles.section}>
         <Card style={styles.chartCard}>
@@ -192,6 +273,47 @@ const AdminDashboardScreen = () => {
             </View>
           </View>
           <BarChart data={weeklyAttendanceData} height={130} barColor="#4ECDC4" />
+        </Card>
+      </View>
+
+      {/* Attendance Summary Donut */}
+      <View style={styles.section}>
+        <Card style={styles.chartCard}>
+          <View style={styles.chartHeader}>
+            <View>
+              <Text style={[typography.h4, { color: colors.textPrimary }]}>Attendance Summary</Text>
+              <Text style={[typography.bodySmall, { color: colors.textTertiary, marginTop: 2 }]}>Today&apos;s presence vs total users</Text>
+            </View>
+            <View style={[styles.trendBadge, { backgroundColor: '#4ECDC4' + '15' }]}>
+              <MaterialCommunityIcons name="account-group" size={16} color="#4ECDC4" />
+            </View>
+          </View>
+          <DonutChart 
+            data={attendanceDistribution} 
+            size={130} 
+            strokeWidth={20} 
+            centerLabel={`${Math.round((todayAttendance / (users.length || 1)) * 100)}%`}
+          />
+        </Card>
+      </View>
+
+      {/* Burnout Risk Distribution Donut */}
+      <View style={styles.section}>
+        <Card style={styles.chartCard}>
+          <View style={styles.chartHeader}>
+            <View>
+              <Text style={[typography.h4, { color: colors.textPrimary }]}>Employee Wellness</Text>
+              <Text style={[typography.bodySmall, { color: colors.textTertiary, marginTop: 2 }]}>Burnout risk levels across team</Text>
+            </View>
+            <View style={[styles.trendBadge, { backgroundColor: colors.accent + '15' }]}>
+              <MaterialCommunityIcons name="heart-pulse" size={16} color={colors.accent} />
+            </View>
+          </View>
+          <DonutChart 
+            data={burnoutDistribution} 
+            size={130} 
+            strokeWidth={20}
+          />
         </Card>
       </View>
 
@@ -382,6 +504,76 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 40,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    marginTop: 10,
+  },
+  aiBadge: {
+    backgroundColor: '#6C5CE7' + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  aiBadgeText: {
+    color: '#6C5CE7',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  riskScroll: {
+    paddingRight: 20,
+    paddingBottom: 8,
+  },
+  riskCard: {
+    width: screenWidth * 0.75,
+    marginRight: 12,
+    borderLeftWidth: 4,
+    padding: 16,
+  },
+  riskHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  riskBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  riskBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  tipContainer: {
+    flexDirection: 'row',
+    padding: 8,
+    borderRadius: 8,
+    alignItems: 'flex-start',
+  },
+  tipText: {
+    fontSize: 11,
+    marginLeft: 6,
+    flex: 1,
+    lineHeight: 16,
+  },
+  errorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  emptyRiskCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    marginBottom: 10,
+    backgroundColor: '#4ECDC410',
   },
 });
 

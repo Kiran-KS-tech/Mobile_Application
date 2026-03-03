@@ -48,7 +48,7 @@ const AdminUserAttendanceDetailsScreen = () => {
         </View>
       </View>
 
-      <View style={styles.timeRow}>
+      <View style={[styles.timeRow, { backgroundColor: colors.surfaceElevated }]}>
         <View style={styles.timeBlock}>
           <Ionicons name="enter-outline" size={16} color={colors.success} />
           <View style={{ marginLeft: 8 }}>
@@ -57,7 +57,7 @@ const AdminUserAttendanceDetailsScreen = () => {
           </View>
         </View>
 
-        <View style={styles.timeDivider} />
+        <View style={[styles.timeDivider, { backgroundColor: colors.border }]} />
 
         <View style={styles.timeBlock}>
           <Ionicons name="exit-outline" size={16} color={colors.error} />
@@ -138,7 +138,6 @@ const styles = StyleSheet.create({
   },
   timeRow: {
     flexDirection: 'row',
-    backgroundColor: '#f8f9fa',
     borderRadius: 8,
     padding: 10,
     alignItems: 'center',
@@ -151,7 +150,6 @@ const styles = StyleSheet.create({
   timeDivider: {
     width: 1,
     height: 30,
-    backgroundColor: '#dee2e6',
     marginHorizontal: 16,
   },
   durationRow: {

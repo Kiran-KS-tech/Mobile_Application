@@ -24,7 +24,7 @@ import Card from '../../components/common/Card';
 import Badge from '../../components/common/Badge';
 
 const TasksScreen = () => {
-  const { colors, typography, spacing, radius, shadow } = useTheme();
+  const { colors, typography, radius, shadow } = useTheme();
   const dispatch = useAppDispatch();
   const { tasks, filter } = useAppSelector(state => state.tasks);
 
@@ -116,12 +116,14 @@ const TasksScreen = () => {
       <FlatList
         data={filteredTasks}
         renderItem={renderTask}
-        keyExtractor={item => item._id}
+        keyExtractor={item => item._id || (item as any).id || Math.random().toString()}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
-          <Text style={[typography.body, { color: colors.textTertiary, textAlign: 'center', marginTop: 40 }]}>
-            No tasks found
-          </Text>
+          <View key="empty-task-list" style={styles.emptyContainer}>
+            <Text style={[typography.body, { color: colors.textTertiary, textAlign: 'center' }]}>
+              No tasks found
+            </Text>
+          </View>
         }
       />
 
@@ -183,6 +185,7 @@ const styles = StyleSheet.create({
   filterBar: { flexDirection: 'row', paddingHorizontal: 24, marginBottom: 16, gap: 8 },
   filterTab: { paddingHorizontal: 16, paddingVertical: 8 },
   listContent: { padding: 24, paddingBottom: 100 },
+  emptyContainer: { marginTop: 40, alignItems: 'center', justifyContent: 'center' },
   taskCard: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   checkbox: { marginRight: 16 },
   taskInfo: { flex: 1 },

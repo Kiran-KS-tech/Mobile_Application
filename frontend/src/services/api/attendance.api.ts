@@ -7,6 +7,7 @@ export interface TimerRecord {
   checkOutTime: string;
   duration: number;
   dateString: string;
+  lateBySeconds?: number; // seconds late past scheduled start (9:00 AM); 0 or absent if on time
 }
 
 export const attendanceApi = {

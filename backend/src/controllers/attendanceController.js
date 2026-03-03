@@ -40,11 +40,22 @@ const checkIn = async (req, res) => {
             }
         }
 
+        // Calculate how many seconds late the user is past the scheduled 9:00 AM start
+        const now = new Date();
+        const scheduledStart = new Date(now);
+        scheduledStart.setHours(9, 0, 0, 0); // Scheduled start: 9:00 AM
+
+        const lateMs = now.getTime() - scheduledStart.getTime();
+        // If >= 10 minutes (600,000 ms) past scheduled start, apply a fixed 10-minute (600s) offset
+        // This makes the displayed timer start at 00:10:00 instead of 00:00:00 for late check-ins
+        const lateBySeconds = lateMs >= 600000 ? 600 : 0;
+
         // Create a new timer session for every check-in
         const timer = new Timer({
             userId: req.user._id,
-            checkInTime: new Date(),
-            dateString
+            checkInTime: now,
+            dateString,
+            lateBySeconds
         });
 
         await timer.save();

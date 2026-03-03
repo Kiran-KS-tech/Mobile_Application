@@ -6,7 +6,7 @@ export const chatApi = {
     const { data } = await axiosInstance.get('/chat/history');
     return data;
   },
-  sendMessage: async (content: string): Promise<{ userMessage: Message; aiMessage: Message }> => {
+  sendMessage: async (content: string): Promise<{ userMessage: Message; aiMessage: Message; quickReplies: string[] }> => {
     const { data } = await axiosInstance.post('/chat/message', { content });
     return data;
   },

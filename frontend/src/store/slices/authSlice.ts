@@ -43,6 +43,18 @@ export const logoutThunk = createAsyncThunk('auth/logout', async () => {
   await SecureStore.deleteItemAsync('calmx_token');
 });
 
+export const updateProfileThunk = createAsyncThunk('auth/updateProfile',
+  async (updates: Partial<User>, { rejectWithValue }) => {
+    try {
+      const res = await authApi.updateProfile(updates);
+      if (res.token) {
+        await SecureStore.setItemAsync('calmx_token', res.token);
+      }
+      return res;
+    } catch (e: any) { return rejectWithValue(e?.response?.data?.message || 'Update failed'); }
+  }
+);
+
 export const fetchAllUsersThunk = createAsyncThunk('auth/fetchAllUsers',
   async (_, { rejectWithValue }) => {
     try {
@@ -81,6 +93,14 @@ const authSlice = createSlice({
     b.addCase(fetchAllUsersThunk.pending, s => { s.isLoading = true; });
     b.addCase(fetchAllUsersThunk.fulfilled, (s, a) => { s.isLoading = false; s.users = a.payload; });
     b.addCase(fetchAllUsersThunk.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string; });
+    // updateProfile
+    b.addCase(updateProfileThunk.pending, s => { s.isLoading = true; s.error = null; });
+    b.addCase(updateProfileThunk.fulfilled, (s, a) => {
+      s.isLoading = false;
+      if (a.payload.token) s.token = a.payload.token;
+      s.user = a.payload.user;
+    });
+    b.addCase(updateProfileThunk.rejected, (s, a) => { s.isLoading = false; s.error = a.payload as string; });
   },
 });
 

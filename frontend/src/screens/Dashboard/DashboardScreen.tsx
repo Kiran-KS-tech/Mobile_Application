@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -18,15 +18,17 @@ import WorkloadCard from '../../components/cards/WorkloadCard';
 import MoodCard from '../../components/cards/MoodCard';
 import FocusCard from '../../components/cards/FocusCard';
 import EventCard from '../../components/cards/EventCard';
+import HolidayCard from '../../components/cards/HolidayCard';
 import EmptyState from '../../components/common/EmptyState';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import { Ionicons } from '@expo/vector-icons';
+import { holidayApi, HolidayRecord } from '../../services/api/holiday.api';
 
 type NavigationProp = BottomTabNavigationProp<MainTabParamList, 'Dashboard'>;
 
 const DashboardScreen = () => {
-  const { colors, typography, spacing, radius } = useTheme();
+  const { colors, typography } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const dispatch = useAppDispatch();
   
@@ -37,23 +39,44 @@ const DashboardScreen = () => {
   const { myLeaves, isLoading: leaveLoading } = useAppSelector(state => state.leave);
 
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [holidays, setHolidays] = useState<HolidayRecord[]>([]);
+  const [holidaysLoading, setHolidaysLoading] = useState(false);
 
-  const isLoading = wellnessLoading || attendanceLoading || leaveLoading;
+  const isLoading = wellnessLoading || attendanceLoading || leaveLoading || holidaysLoading;
 
-  const loadData = () => {
+  const fetchHolidays = useCallback(async () => {
+    try {
+      setHolidaysLoading(true);
+      const data = await holidayApi.getHolidays();
+      // Filter for upcoming holidays and sort by date ascending
+      const todayDate = new Date();
+      todayDate.setHours(0, 0, 0, 0);
+      const upcoming = data
+        .filter(h => new Date(h.date) >= todayDate)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      setHolidays(upcoming);
+    } catch (err) {
+      console.log('Error fetching holidays on dashboard', err);
+    } finally {
+      setHolidaysLoading(false);
+    }
+  }, []);
+
+  const loadData = useCallback(() => {
     dispatch(fetchWellnessSummary());
     dispatch(fetchMoodLogs());
     const currentMonth = new Date().toISOString().slice(0, 7);
     dispatch(fetchEvents(currentMonth));
     dispatch(fetchMyRecords());
     dispatch(fetchMyLeaves());
-  };
+    fetchHolidays();
+  }, [dispatch, fetchHolidays]);
 
   useEffect(() => {
     loadData();
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [loadData]);
 
   const todayStr = currentTime.toLocaleDateString('en-US', { 
     weekday: 'short', 
@@ -69,45 +92,56 @@ const DashboardScreen = () => {
   });
 
   const todayDateString = currentTime.toISOString().split('T')[0];
-  const latestRecord = myRecords.find(r => r.dateString === todayDateString) || (myRecords.length > 0 ? myRecords[0] : null);
-  const isCheckedIn = latestRecord && !latestRecord.checkOutTime;
+
+  // All sessions for today
+  const todayRecords = myRecords.filter(r => r.dateString === todayDateString);
+  // The currently active (no checkout) session
+  const activeRecord = todayRecords.find(r => !r.checkOutTime) || null;
+  const isCheckedIn = !!activeRecord;
+  // Sum of all fully completed sessions today (for continuity when re-checking in)
+  const completedTodaySeconds = todayRecords
+    .filter(r => r.checkOutTime)
+    .reduce((sum, r) => sum + (r.duration || 0), 0);
 
   const [activeDuration, setActiveDuration] = useState('00:00:00');
 
   useEffect(() => {
-    const isToday = latestRecord?.dateString === todayDateString;
-    if (isCheckedIn && latestRecord?.checkInTime && isToday) {
+    if (isCheckedIn && activeRecord?.checkInTime) {
       const interval = setInterval(() => {
-        const start = new Date(latestRecord.checkInTime).getTime();
+        const start = new Date(activeRecord.checkInTime).getTime();
         const now = new Date().getTime();
-        const accumulated = (latestRecord.duration || 0) * 1000;
-        const diff = Math.max(0, now - start + accumulated);
-        
+        // Current session elapsed
+        const currentElapsed = Math.max(0, now - start);
+        // All previously completed sessions today
+        const previousMs = completedTodaySeconds * 1000;
+        const diff = currentElapsed + previousMs;
+
         const hours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        
+
         setActiveDuration(
           `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
         );
       }, 1000);
       return () => clearInterval(interval);
     } else {
-      const accumulated = (isToday ? (latestRecord?.duration || 0) : 0) * 1000;
-      const hours = Math.floor(accumulated / (1000 * 60 * 60));
-      const minutes = Math.floor((accumulated % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((accumulated % (1000 * 60)) / 1000);
+      // Checked out: show total completed time today
+      const diff = completedTodaySeconds * 1000;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
       setActiveDuration(
         `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
       );
     }
-  }, [isCheckedIn, latestRecord?.checkInTime, latestRecord?.duration, todayDateString]);
+  }, [isCheckedIn, activeRecord?.checkInTime, completedTodaySeconds, todayRecords, todayDateString]);
 
   const handleCheckInOut = () => {
     if (isCheckedIn) {
-      dispatch(checkOutThunk());
+      dispatch(checkOutThunk()).then(() => dispatch(fetchMyRecords()));
     } else {
-      dispatch(checkInThunk());
+      dispatch(checkInThunk()).then(() => dispatch(fetchMyRecords()));
     }
   };
 
@@ -162,10 +196,11 @@ const DashboardScreen = () => {
             />
           </View>
           
-          {isCheckedIn && latestRecord && (
+          {isCheckedIn && activeRecord && (
             <View style={{ marginBottom: 16 }}>
               <Text style={[typography.bodySmall, { color: colors.textSecondary }]}>
-                Since: {new Date(latestRecord.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                Since: {new Date(activeRecord.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {completedTodaySeconds > 0 && ` (+${Math.floor(completedTodaySeconds / 60)}m prev)`}
               </Text>
               <Text style={[typography.h2, { color: colors.accent, marginTop: 4 }]}>
                 {activeDuration}
@@ -235,7 +270,7 @@ const DashboardScreen = () => {
         {/* Upcoming Events */}
         <View style={styles.sectionHeader}>
           <Text style={[typography.labelCaps, { color: colors.textTertiary }]}>
-            UPCOMING
+            UPCOMING EVENTS
           </Text>
         </View>
 
@@ -245,6 +280,24 @@ const DashboardScreen = () => {
           ))
         ) : (
           <EmptyState message="No upcoming events" icon="calendar-blank" />
+        )}
+
+        {/* Upcoming Holidays */}
+        <View style={styles.sectionHeader}>
+          <Text style={[typography.labelCaps, { color: colors.textTertiary }]}>
+            UPCOMING HOLIDAYS
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Profile' as any, { screen: 'Holidays' })}>
+            <Text style={[typography.labelSmall, { color: colors.accent }]}>VIEW ALL</Text>
+          </TouchableOpacity>
+        </View>
+
+        {holidays && holidays.length > 0 ? (
+          holidays.map(holiday => (
+            <HolidayCard key={holiday._id} holiday={holiday} />
+          ))
+        ) : (
+          <EmptyState message="No upcoming holidays" icon="party-popper" />
         )}
       </ScrollView>
     </SafeAreaView>

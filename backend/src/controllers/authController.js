@@ -14,6 +14,7 @@ const sanitizeUser = (user) => {
         role: user.role,
         medicalLeaves: user.medicalLeaves,
         casualLeaves: user.casualLeaves,
+        preferences: user.preferences,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
     };
@@ -96,7 +97,7 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, preferences } = req.body;
 
         const user = await User.findById(req.user._id);
 
@@ -105,8 +106,13 @@ const updateProfile = async (req, res) => {
         }
 
         if (name) user.name = name;
-        if (email) user.email = email;
         if (password) user.password = password;
+        
+        if (preferences) {
+            if (typeof preferences.shareData === 'boolean') user.preferences.shareData = preferences.shareData;
+            if (typeof preferences.aiAnalytics === 'boolean') user.preferences.aiAnalytics = preferences.aiAnalytics;
+            if (typeof preferences.pushNotifs === 'boolean') user.preferences.pushNotifs = preferences.pushNotifs;
+        }
 
         const updatedUser = await user.save();
         const sanitized = sanitizeUser(updatedUser);

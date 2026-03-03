@@ -12,7 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
-import { logoutThunk } from '../../store/slices/authSlice';
+import { logoutThunk, updateProfileThunk } from '../../store/slices/authSlice';
 import { fetchTasks } from '../../store/slices/taskSlice';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
@@ -27,9 +27,31 @@ const ProfileScreen = () => {
   const { summary } = useAppSelector(state => state.wellness);
   const { tasks } = useAppSelector(state => state.tasks);
 
-  const [shareData, setShareData] = useState(true);
-  const [aiAnalytics, setAiAnalytics] = useState(true);
-  const [pushNotifs, setPushNotifs] = useState(false);
+  const [shareData, setShareData] = useState(user?.preferences?.shareData ?? true);
+  const [aiAnalytics, setAiAnalytics] = useState(user?.preferences?.aiAnalytics ?? true);
+  const [pushNotifs, setPushNotifs] = useState(user?.preferences?.pushNotifs ?? false);
+
+  useEffect(() => {
+    if (user?.preferences) {
+      setShareData(user.preferences.shareData ?? true);
+      setAiAnalytics(user.preferences.aiAnalytics ?? true);
+      setPushNotifs(user.preferences.pushNotifs ?? false);
+    }
+  }, [user?.preferences]);
+
+  const handleTogglePreference = (preference: 'shareData' | 'aiAnalytics' | 'pushNotifs', value: boolean) => {
+    if (preference === 'shareData') setShareData(value);
+    if (preference === 'aiAnalytics') setAiAnalytics(value);
+    if (preference === 'pushNotifs') setPushNotifs(value);
+
+    dispatch(updateProfileThunk({
+      preferences: {
+        shareData: preference === 'shareData' ? value : shareData,
+        aiAnalytics: preference === 'aiAnalytics' ? value : aiAnalytics,
+        pushNotifs: preference === 'pushNotifs' ? value : pushNotifs,
+      }
+    }));
+  };
 
   useEffect(() => {
     dispatch(fetchTasks());
@@ -64,7 +86,7 @@ const ProfileScreen = () => {
             <Text style={[typography.h2, { color: colors.textPrimary }]}>{user?.name}</Text>
             <Text style={[typography.body, { color: colors.textSecondary }]}>{user?.email}</Text>
           </View>
-          <Button variant="ghost" label="Edit Profile" onPress={() => Alert.alert('Edit Profile', 'Edit Profile coming soon!')} size="sm" style={{ width: 'auto', marginTop: 16 }} />
+          <Button variant="ghost" label="Edit Profile" onPress={() => navigation.navigate('EditProfile')} size="sm" style={{ width: 'auto', marginTop: 16 }} />
         </View>
 
         {/* Stats Row */}
@@ -106,6 +128,24 @@ const ProfileScreen = () => {
           </View>
         </Card>
 
+        {/* Leave Balance Card */}
+        <Card style={[styles.insightCard, { marginBottom: 32 }]}>
+          <Text style={[typography.labelCaps, { color: colors.textSecondary, marginBottom: 16 }]}>
+            LEAVE BALANCES
+          </Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', marginBottom: 8 }}>
+             <View style={{ alignItems: 'center' }}>
+               <Text style={[typography.h2, { color: colors.accent }]}>{user?.casualLeaves ?? 0}</Text>
+               <Text style={[typography.body, { color: colors.textSecondary }]}>Casual Leaves</Text>
+             </View>
+             <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
+             <View style={{ alignItems: 'center' }}>
+               <Text style={[typography.h2, { color: colors.accent }]}>{user?.medicalLeaves ?? 0}</Text>
+               <Text style={[typography.body, { color: colors.textSecondary }]}>Medical Leaves</Text>
+             </View>
+          </View>
+        </Card>
+
         {/* HR Tools */}
         <View style={styles.sectionHeader}>
           <Text style={[typography.labelCaps, { color: colors.textTertiary }]}>HR TOOLS</Text>
@@ -131,15 +171,15 @@ const ProfileScreen = () => {
 
         <View style={styles.settingRow}>
           <Text style={[typography.body, { color: colors.textPrimary }]}>Share mood data</Text>
-          <Switch value={shareData} onValueChange={setShareData} trackColor={{ true: colors.accent, false: colors.border }} />
+          <Switch value={shareData} onValueChange={(val) => handleTogglePreference('shareData', val)} trackColor={{ true: colors.accent, false: colors.border }} />
         </View>
         <View style={styles.settingRow}>
           <Text style={[typography.body, { color: colors.textPrimary }]}>AI Analytics</Text>
-          <Switch value={aiAnalytics} onValueChange={setAiAnalytics} trackColor={{ true: colors.accent, false: colors.border }} />
+          <Switch value={aiAnalytics} onValueChange={(val) => handleTogglePreference('aiAnalytics', val)} trackColor={{ true: colors.accent, false: colors.border }} />
         </View>
         <View style={styles.settingRow}>
           <Text style={[typography.body, { color: colors.textPrimary }]}>Push Notifications</Text>
-          <Switch value={pushNotifs} onValueChange={setPushNotifs} trackColor={{ true: colors.accent, false: colors.border }} />
+          <Switch value={pushNotifs} onValueChange={(val) => handleTogglePreference('pushNotifs', val)} trackColor={{ true: colors.accent, false: colors.border }} />
         </View>
 
         <Button

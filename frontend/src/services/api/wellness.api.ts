@@ -10,4 +10,8 @@ export const wellnessApi = {
     const { data } = await axiosInstance.get('/wellness/insights');
     return data;
   },
+  getBurnoutRisk: async (): Promise<{ riskLevel: string; factors: string[] }> => {
+    const { data } = await axiosInstance.get('/wellness/burnout-risk');
+    return data;
+  },
 };

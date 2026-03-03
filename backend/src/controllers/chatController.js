@@ -1,6 +1,7 @@
 const Groq = require('groq-sdk');
 const Mood = require('../models/Mood');
 const Chat = require('../models/Chat');
+const { analyzeSentiment } = require('../services/sentimentService');
 
 // Initialize Groq
 const groq = new Groq({
@@ -48,17 +49,21 @@ const postChatMessage = async (req, res) => {
             });
         }
 
-        // 2. Build User Context from Mood
-        const latestMood = await Mood.findOne({ user: userId }).sort({ createdAt: -1 });
-        const contextString = latestMood 
-            ? `Mood: ${latestMood.score}/100, Stress: ${latestMood.stressLevel}`
+        // 2. Build User Context from Mood Trends
+        const lastMoods = await Mood.find({ user: userId }).sort({ createdAt: -1 }).limit(5);
+        let contextString = lastMoods.length > 0
+            ? lastMoods.map(m => `[${m.createdAt.toISOString().slice(0,10)}] Score: ${m.score}, Stress: ${m.stressLevel}`).join('; ')
             : "No recent mood data.";
+
+        // Perform real-time sentiment analysis on the current message
+        const currentSentiment = await analyzeSentiment(message);
+        contextString += ` | Current Message Sentiment: Score ${currentSentiment.score}, Stress ${currentSentiment.stressLevel}`;
 
         const systemPrompt = `You are CalmX AI, a psychological resource assistant specialized in workplace wellness and corporate burnout.
 Core Directives:
 - Use Cognitive Behavioral Therapy (CBT) and empathetic listening.
 - Keep responses concise, warm, and actionable.
-- User Context: ${contextString}
+- User Trends: ${contextString}
 - Strategy: Validating the user's feelings first, then offer supportive steps.
 - Role: You are an AI assistant, not a doctor. Mention professional help if distress is high.`;
 
@@ -97,10 +102,39 @@ Core Directives:
         chatEntry.messages.push(newUserMsg, newAiMsg);
         await chatEntry.save();
 
-        // 6. Return response with stable IDs
+        // 6. Proactively Log Mood based on sentiment (Auto-Mood Logging)
+        if (currentSentiment.score !== 50) { // Only log if sentiment is clearly detected
+            await Mood.create({
+                user: userId,
+                score: currentSentiment.score,
+                stressLevel: currentSentiment.stressLevel,
+                note: `Auto-logged from chat: "${message.substring(0, 50)}..."`
+            });
+        }
+
+        // 7. Generate Quick Replies
+        let quickReplies = [];
+        try {
+            const qrCompletion = await groq.chat.completions.create({
+                messages: [
+                    { role: "system", content: "Generate 3 short (1-3 words) quick reply suggestions for the user to respond to the previous AI message. Return JSON: { \"replies\": [\"string\", \"string\", \"string\"] }" },
+                    { role: "assistant", content: aiReply }
+                ],
+                model: "llama-3.1-8b-instant",
+                temperature: 0.5,
+                response_format: { type: "json_object" }
+            });
+            quickReplies = JSON.parse(qrCompletion.choices[0].message.content).replies;
+        } catch (qrError) {
+            console.error('Quick Reply Error:', qrError.message);
+            quickReplies = ["Tell me more", "Thanks!", "What's next?"];
+        }
+
+        // 8. Return response with stable IDs
         return res.status(201).json({ 
             userMessage: chatEntry.messages[chatEntry.messages.length - 2], 
-            aiMessage: chatEntry.messages[chatEntry.messages.length - 1] 
+            aiMessage: chatEntry.messages[chatEntry.messages.length - 1],
+            quickReplies
         });
 
     } catch (error) {

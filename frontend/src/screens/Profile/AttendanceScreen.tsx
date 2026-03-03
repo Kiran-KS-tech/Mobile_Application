@@ -117,8 +117,18 @@ const AttendanceScreen = () => {
             <View>
               <Text style={[typography.body, { color: colors.textPrimary, fontWeight: '600' }]}>{item.dateString}</Text>
               <Text style={[typography.bodySmall, { color: colors.textSecondary }]}>
-                Duration: {item.duration ? `${Math.floor(item.duration / 3600)}h ${Math.floor((item.duration % 3600) / 60)}m` : 'Ongoing'}
+                Duration: {item.checkOutTime
+                  ? (() => {
+                      const totalSeconds = (item.duration || 0) + (item.lateBySeconds || 0);
+                      return `${Math.floor(totalSeconds / 3600)}h ${Math.floor((totalSeconds % 3600) / 60)}m`;
+                    })()
+                  : 'Ongoing'}
               </Text>
+              {(item.lateBySeconds || 0) >= 600 && (
+                <Text style={[typography.bodySmall, { color: colors.error || '#e53935', marginTop: 2 }]}>
+                  Late by {Math.floor((item.lateBySeconds || 0) / 60)}m
+                </Text>
+              )}
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <Text style={[typography.body, { color: colors.textPrimary }]}>In: {formatTime(item.checkInTime)}</Text>

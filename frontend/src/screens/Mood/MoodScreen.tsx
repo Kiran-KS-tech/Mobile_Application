@@ -20,6 +20,8 @@ import { MoodType } from '../../types';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import WeeklyMoodChart from '../../components/charts/WeeklyMoodChart';
+import MoodFeedback from '../../components/MoodFeedback';
+import { moodApi } from '../../services/api/mood.api';
 
 const MoodScreen = () => {
   const { colors, typography, spacing, radius } = useTheme();
@@ -30,6 +32,8 @@ const MoodScreen = () => {
   const [stressLevel, setStressLevel] = useState(5);
   const [energyLevel, setEnergyLevel] = useState(5);
   const [note, setNote] = useState('');
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState('');
 
   useEffect(() => {
     dispatch(fetchMoodLogs());
@@ -44,19 +48,43 @@ const MoodScreen = () => {
     { type: 'great', emoji: '😄' },
   ];
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (selectedMood) {
       const moodScoreMap: Record<MoodType, number> = {
         great: 5, good: 4, okay: 3, low: 2, awful: 1
       };
       
-      dispatch(submitMoodLogThunk({
-        mood: selectedMood,
-        moodScore: moodScoreMap[selectedMood] as any,
-        stressLevel,
-        energyLevel,
-        note,
-      }));
+      try {
+        // Prepare data for backend (which expects 'score' vs 'moodScore')
+        const apiData = {
+          score: moodScoreMap[selectedMood] * 20, // Scale 1-5 to 1-100 for backend
+          note,
+          meetingDensity: stressLevel,
+          energyLevel,
+        };
+
+        await dispatch(submitMoodLogThunk(apiData)).unwrap();
+        
+        // Fetch AI feedback after successful log
+        const feedbackData = {
+          mood: selectedMood,
+          score: moodScoreMap[selectedMood], // 1-5 for AI context
+          stressLevel,
+          energyLevel,
+          note
+        };
+        const { feedback } = await moodApi.getMoodFeedback(feedbackData);
+        setAiFeedback(feedback);
+        setFeedbackVisible(true);
+        
+        // Reset local state
+        setSelectedMood(null);
+        setNote('');
+        // Refresh weekly data
+        dispatch(fetchWeeklyMood());
+      } catch (err) {
+        console.error('Failed to log mood or get feedback:', err);
+      }
     }
   };
 
@@ -148,6 +176,12 @@ const MoodScreen = () => {
             />
 
             <WeeklyMoodChart data={weeklyData} />
+            
+            <MoodFeedback 
+              visible={feedbackVisible} 
+              feedback={aiFeedback} 
+              onClose={() => setFeedbackVisible(false)} 
+            />
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>

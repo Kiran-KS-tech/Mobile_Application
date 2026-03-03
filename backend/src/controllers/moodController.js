@@ -2,7 +2,7 @@ const Mood = require('../models/Mood');
 
 const logMood = async (req, res) => {
     try {
-        const { score, note, meetingDensity } = req.body;
+        const { score, note, meetingDensity, energyLevel } = req.body;
 
         if (typeof score !== 'number') {
             return res.status(400).json({ message: 'Score is required and must be a number' });
@@ -16,6 +16,7 @@ const logMood = async (req, res) => {
             user: req.user._id,
             score,
             stressLevel,
+            energyLevel,
             note,
             context: { meetingDensity }
         });

@@ -4,6 +4,7 @@ import { ChatState, Message } from '../../types';
 
 const initialState: ChatState = {
   messages: [], isTyping: false, isLoading: false, isSending: false, error: null, sessionId: null,
+  quickReplies: [],
 };
 
 export const fetchChatHistory = createAsyncThunk('chat/history',
@@ -43,6 +44,7 @@ const chatSlice = createSlice({
     b.addCase(sendMessageThunk.pending, s => { s.isSending = true; s.isTyping = true; });
     b.addCase(sendMessageThunk.fulfilled, (s, a) => {
       s.isSending = false; s.isTyping = false;
+      s.quickReplies = a.payload.quickReplies;
       // replace optimistic + add AI reply
       const last = s.messages[s.messages.length - 1];
       if (last?.role === 'user') s.messages[s.messages.length - 1] = a.payload.userMessage;

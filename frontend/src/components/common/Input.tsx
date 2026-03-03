@@ -12,6 +12,7 @@ interface InputProps {
   hint?: string;
   keyboardType?: KeyboardTypeOptions;
   multiline?: boolean;
+  editable?: boolean;
 }
 
 const Input = ({
@@ -24,6 +25,7 @@ const Input = ({
   hint,
   keyboardType,
   multiline,
+  editable = true,
 }: InputProps) => {
   const { colors, typography, radius, spacing } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
@@ -41,12 +43,14 @@ const Input = ({
             borderColor: error ? colors.error : (isFocused ? colors.inputFocusBorder : colors.inputBorder),
             borderWidth: isFocused || error ? 1.5 : 1,
             borderRadius: radius.sm,
+            opacity: editable ? 1 : 0.5,
           },
           multiline && { height: 120, alignItems: 'flex-start', paddingVertical: 12 },
         ]}
       >
         <RNTextInput
           value={value}
+          editable={editable}
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor={colors.inputPlaceholder}

@@ -13,9 +13,10 @@ interface DonutChartProps {
   data: DonutSegment[];
   size?: number;
   strokeWidth?: number;
+  centerLabel?: string;
 }
 
-const DonutChart = ({ data, size = 140, strokeWidth = 22 }: DonutChartProps) => {
+const DonutChart = ({ data, size = 140, strokeWidth = 22, centerLabel }: DonutChartProps) => {
   const { colors } = useTheme();
 
   const total = data.reduce((sum, s) => sum + s.value, 0);
@@ -68,7 +69,7 @@ const DonutChart = ({ data, size = 140, strokeWidth = 22 }: DonutChartProps) => 
           fill={colors.textPrimary}
           textAnchor="middle"
         >
-          {total}
+          {centerLabel || total}
         </SvgText>
         <SvgText
           x={cx}
@@ -78,7 +79,7 @@ const DonutChart = ({ data, size = 140, strokeWidth = 22 }: DonutChartProps) => 
           fill={colors.textTertiary}
           textAnchor="middle"
         >
-          TOTAL
+          {centerLabel ? 'STATUS' : 'TOTAL'}
         </SvgText>
       </Svg>
 

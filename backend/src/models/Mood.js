@@ -5,6 +5,7 @@ const moodSchema = mongoose.Schema({
     score: { type: Number, required: true },
     stressLevel: { type: String, required: true, enum: ['Low', 'Medium', 'High'] },
     note: { type: String },
+    energyLevel: { type: Number },
     context: {
         meetingDensity: Number,
         emailVolume: Number

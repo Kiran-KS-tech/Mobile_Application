@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { moodApi } from '../../services/api/mood.api';
 import { MoodState, MoodLog } from '../../types';
 
@@ -14,7 +14,7 @@ export const fetchMoodLogs = createAsyncThunk('mood/fetchLogs',
 );
 
 export const submitMoodLogThunk = createAsyncThunk('mood/submit',
-  async (log: Omit<MoodLog, 'id' | 'timestamp'>, { rejectWithValue }) => {
+  async (log: { score: number; note?: string; meetingDensity: number; energyLevel: number }, { rejectWithValue }) => {
     try { return await moodApi.submitLog(log); }
     catch (e: any) { return rejectWithValue(e.message); }
   }

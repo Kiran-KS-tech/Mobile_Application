@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
@@ -11,6 +11,15 @@ const AdminAttendanceScreen = () => {
   const { colors, typography } = useTheme();
   const dispatch = useAppDispatch();
   const { allRecords, isLoading } = useAppSelector(state => state.attendance);
+
+  const todaysRecords = useMemo(() => {
+    const todayStr = new Date().toDateString();
+    return allRecords.filter((item: any) => {
+      const dateToUse = item.firstCheckIn || item.dateString || item._id?.dateString;
+      if (!dateToUse) return false;
+      return new Date(dateToUse).toDateString() === todayStr;
+    });
+  }, [allRecords]);
 
   useEffect(() => {
     dispatch(fetchAllRecords());
@@ -39,7 +48,7 @@ const AdminAttendanceScreen = () => {
               {item.userId?.name || 'Unknown User'}
             </Text>
             <Text style={[typography.bodySmall, { color: colors.textSecondary }]}>
-              {formatDate(item.checkInTime)}
+              {formatDate(item.firstCheckIn || item.dateString)}
             </Text>
           </View>
         </View>
@@ -83,13 +92,13 @@ const AdminAttendanceScreen = () => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={[typography.h1, { color: colors.textPrimary }]}>Employee Attendance</Text>
-        <Text style={[typography.body, { color: colors.textSecondary }]}>Monitor check-in/out records</Text>
+        <Text style={[typography.h1, { color: colors.textPrimary }]}>Today&apos;s Attendance</Text>
+        <Text style={[typography.body, { color: colors.textSecondary }]}>Monitor today&apos;s check-in/out records</Text>
       </View>
 
       <FlatList
-        data={allRecords}
-        keyExtractor={(item) => item._id}
+        data={todaysRecords}
+        keyExtractor={(item) => (item._id?.userId || item.userId?._id) + '_' + (item._id?.dateString || item.dateString)}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
@@ -99,7 +108,7 @@ const AdminAttendanceScreen = () => {
           <View style={styles.emptyContainer}>
             <Ionicons name="calendar-outline" size={48} color={colors.textTertiary} />
             <Text style={[typography.body, { color: colors.textSecondary, marginTop: 16 }]}>
-              No attendance records found
+              No attendance records found for today
             </Text>
           </View>
         }

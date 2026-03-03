@@ -53,6 +53,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
       case 'Tasks':     return focused ? 'checkbox-marked-circle' : 'checkbox-blank-circle-outline' as any;
       case 'Focus':     return focused ? 'clock' : 'clock-outline' as any;
       case 'Profile':   return focused ? 'account' : 'account-outline' as any;
+      case 'Mood':      return focused ? 'emoticon-happy' : 'emoticon-happy-outline' as any;
       default:          return 'circle';
     }
   };

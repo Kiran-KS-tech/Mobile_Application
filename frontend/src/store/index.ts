@@ -8,6 +8,7 @@ import focusReducer     from './slices/focusSlice';
 import wellnessReducer  from './slices/wellnessSlice';
 import attendanceReducer from './slices/attendanceSlice';
 import leaveReducer      from './slices/leaveSlice';
+import adminReducer      from './slices/adminSlice';
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     wellness:   wellnessReducer,
     attendance: attendanceReducer,
     leave:      leaveReducer,
+    admin:      adminReducer,
   },
   middleware: g => g({ serializableCheck: false }),
 });

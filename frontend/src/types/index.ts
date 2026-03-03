@@ -7,6 +7,11 @@ export interface User {
   role?: string;
   medicalLeaves: number;
   casualLeaves: number;
+  preferences?: {
+    shareData: boolean;
+    aiAnalytics: boolean;
+    pushNotifs: boolean;
+  };
   createdAt: string;
 }
 
@@ -66,6 +71,7 @@ export interface ChatState {
   isSending: boolean;
   error: string | null;
   sessionId: string | null;
+  quickReplies: string[];
 }
 
 // ── Calendar ──────────────────────────────────────────────────
@@ -157,6 +163,21 @@ export interface WellnessSummary {
 
 export interface WellnessState {
   summary: WellnessSummary | null;
+  burnoutRisk: { riskLevel: string; factors: string[] } | null;
+  isLoading: boolean;
+  error: string | null;
+}
+
+// ── Admin AI ──────────────────────────────────────────────────
+export interface BurnoutRisk {
+  name: string;
+  riskLevel: 'High' | 'Medium' | 'Low';
+  reason: string;
+  recommendation: string;
+}
+
+export interface AdminState {
+  burnoutRisks: BurnoutRisk[];
   isLoading: boolean;
   error: string | null;
 }
@@ -180,6 +201,7 @@ export type MainTabParamList = {
   Tasks:     undefined;
   Focus:     undefined;
   Profile:   undefined;
+  Mood:      undefined;
 };
 
 export type AdminTabParamList = {

@@ -13,7 +13,16 @@ const WeeklyMoodChart = ({ data }: WeeklyMoodChartProps) => {
   const screenWidth = Dimensions.get('window').width - 64; // Horizontal padding
   const chartHeight = 200;
   const barWidth = 32;
-  const gap = (screenWidth - data.length * barWidth) / (data.length - 1);
+
+  if (!Array.isArray(data) || data.length === 0) {
+    return (
+      <View style={[styles.container, { height: chartHeight + 80, justifyContent: 'center', alignItems: 'center' }]}>
+         <Text style={[typography.body, { color: colors.textTertiary }]}>No mood data for this week</Text>
+      </View>
+    );
+  }
+
+  const gap = data.length > 1 ? (screenWidth - data.length * barWidth) / (data.length - 1) : 0;
 
   const maxMood = 5;
   const barScale = chartHeight / maxMood;
@@ -50,7 +59,7 @@ const WeeklyMoodChart = ({ data }: WeeklyMoodChartProps) => {
                     textAnchor="middle"
                     fontWeight="700"
                   >
-                    {point.day.toUpperCase()}
+                    {point.day?.toUpperCase() || ''}
                   </SvgText>
                 </G>
               );
